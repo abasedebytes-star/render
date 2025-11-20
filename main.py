@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse
+[3:28 PM, 11/20/2025] Ivan Estigarribia: from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse, HTMLResponse
 import requests
 import os
 
@@ -25,6 +25,40 @@ def home():
 # ---------------------------
 # FACEBOOK LOGIN
 # ---------------------------
+@app.get("/auth/facebook/login")
+def facebook_login():
+    fb_auth_url = (
+  …
+[3:35 PM, 11/20/2025] Ivan Estigarribia: from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse, HTMLResponse
+import requests
+import os
+
+app = FastAPI()
+
+# ----------------------------------
+# ENV VARIABLES (Render)
+# ----------------------------------
+FB_APP_ID = os.getenv("FB_APP_ID")
+FB_APP_SECRET = os.getenv("FB_APP_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")          # Ej: https://tuapp.onrender.com/auth/facebook/callback
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")          # Para Webhooks
+
+
+# ----------------------------------
+# HOME
+# ----------------------------------
+@app.get("/")
+def home():
+    return {
+        "status": "ok",
+        "message": "OAuth + Webhooks funcionando correctamente"
+    }
+
+
+# ----------------------------------
+# FACEBOOK LOGIN
+# ----------------------------------
 @app.get("/auth/facebook/login")
 def facebook_login():
     fb_auth_url = (
@@ -63,9 +97,9 @@ def facebook_callback(code: str):
     return user_info
 
 
-# ---------------------------
-# WEBHOOK (Facebook + Instagram)
-# ---------------------------
+# ----------------------------------
+# WEBHOOK VERIFY (Facebook + Instagram)
+# ----------------------------------
 @app.get("/webhook")
 async def verify_webhook(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -78,12 +112,74 @@ async def verify_webhook(request: Request):
         return PlainTextResponse("Token inválido", status_code=403)
 
 
+# ----------------------------------
+# WEBHOOK EVENTS
+# ----------------------------------
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     body = await request.json()
     print("WEBHOOK DATA:", body)
 
-    # ⚠️ IMPORTANTE: Instagram también envía aquí sus eventos
-    # Ej: comentarios, mensajes, cambios en medios, etc.
+    # Instagram y Facebook envían:
+    # - mensajes
+    # - comentarios
+    # - eventos de media
+    # - actualizaciones de cuenta
 
     return PlainTextResponse("OK", status_code=200)
+
+
+# ----------------------------------
+# PRIVACY POLICY (Facebook Requirement)
+# ----------------------------------
+@app.get("/privacy-policy", response_class=HTMLResponse)
+def privacy_policy():
+    return """
+    <html><body>
+    <h1>Política de Privacidad</h1>
+    <p>Esta aplicación utiliza datos proporcionados por Facebook e Instagram únicamente para permitir el inicio de sesión, verificar identidad y recibir notificaciones mediante webhooks.</p>
+
+    <h2>1. Datos que recopilamos</h2>
+    <p>- ID de usuario de Facebook/Instagram<br>
+    - Nombre y correo electrónico (solo si el usuario los autoriza)<br>
+    - Información enviada por los webhooks de Meta (mensajes, comentarios, eventos de cuenta, etc.)</p>
+
+    <h2>2. Cómo usamos los datos</h2>
+    <p>Los datos se utilizan únicamente para:</p>
+    <p>- Autenticar al usuario<br>
+    - Permitir funcionamiento de la integración<br>
+    - Procesar eventos enviados por los servicios de Meta</p>
+
+    <h2>3. No compartimos datos</h2>
+    <p>No vendemos, transferimos ni compartimos información con terceros.</p>
+
+    <h2>4. Seguridad</h2>
+    <p>Los datos son procesados de forma segura y nunca se almacenan de manera permanente.</p>
+
+    <h2>5. Contacto</h2>
+    <p>Si necesitás más información, podés enviar un mensaje.</p>
+    </body></html>
+    """
+
+
+# ----------------------------------
+# DATA DELETION (Facebook Requirement)
+# ----------------------------------
+@app.get("/data-deletion", response_class=HTMLResponse)
+def data_deletion():
+    return """
+    <html><body>
+    <h1>Eliminación de Datos del Usuario</h1>
+    <p>Si desea eliminar su información asociada a esta aplicación, siga uno de los siguientes pasos:</p>
+
+    <h2>1. Eliminación automática</h2>
+    <p>La aplicación no almacena información personal en bases de datos. Todos los datos obtenidos desde Facebook se eliminan automáticamente cuando el usuario revoca permisos desde:</p>
+    <p><strong>Facebook Settings → Apps and Websites</strong></p>
+
+    <h2>2. Solicitud manual</h2>
+    <p>Si desea solicitar la eliminación inmediata de cualquier dato temporal procesado, puede contactarnos y se eliminará en un plazo de 48 horas.</p>
+
+    <h2>3. Webhooks</h2>
+    <p>Los datos enviados por Facebook/Instagram a través de webhooks no se almacenan. Solo se procesan en tiempo real para funcionamiento del sistema.</p>
+    </body></html>
+    """
