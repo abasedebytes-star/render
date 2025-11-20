@@ -1,35 +1,4 @@
-[3:28 PM, 11/20/2025] Ivan Estigarribia: from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse, HTMLResponse
-import requests
-import os
-
-app = FastAPI()
-
-# Facebook OAuth
-FB_APP_ID = os.getenv("FB_APP_ID")
-FB_APP_SECRET = os.getenv("FB_APP_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")  # https://render-xxxx.onrender.com/auth/facebook/callback
-
-# Webhooks (Facebook + Instagram)
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
-
-
-# ---------------------------
-# HOME
-# ---------------------------
-@app.get("/")
-def home():
-    return {"status": "ok", "message": "OAuth + Webhooks funcionando"}
-
-
-# ---------------------------
-# FACEBOOK LOGIN
-# ---------------------------
-@app.get("/auth/facebook/login")
-def facebook_login():
-    fb_auth_url = (
-  …
-[3:35 PM, 11/20/2025] Ivan Estigarribia: from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse, HTMLResponse
 import requests
 import os
